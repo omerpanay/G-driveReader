@@ -45,7 +45,6 @@ ehthumbs.db
 Thumbs.db
 
 # Credentials and sensitive files
-credentials.json
 *.key
 *.pem
 .env
