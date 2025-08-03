@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from google_drive.chat_interface import run_drive_chat
+from google_docs.chat_interface import run_documents_chat
 
 def handle_credentials_input():
     """Accepts credentials.json content from the user"""
@@ -38,12 +38,12 @@ def cleanup_credentials():
 
 def main():
     st.set_page_config(
-        page_title="Drive File Reader",
-        page_icon="📁",
+        page_title="Docs File Reader",
+        page_icon="📄",
         layout="wide"
     )
-    st.title("📁 Google Drive File Reader")
-    st.write("Reads files from a Drive folder.")
+    st.title("📄 Google Docs File Reader")
+    st.write("Reads files from Google Docs.")
 
     credentials_saved = handle_credentials_input()
     if not credentials_saved:
@@ -52,22 +52,22 @@ def main():
         **How to obtain credentials:**
         1. Go to [Google Cloud Console](https://console.cloud.google.com/)
         2. Create a new project or select an existing one
-        3. Enable Google Drive API
+        3. Enable Google Docs API
         4. Create a Service Account
         5. Download the JSON key file
         6. Paste its content here
         """)
         return
 
-    folder_id = st.text_input("Google Drive Folder ID", help="Enter the folder ID")
-    if st.button("📂 Read Files"):
-        if not folder_id:
-            st.error("Please enter a Drive Folder ID!")
+    document_id = st.text_input("Google Document ID", help="Enter the document ID")
+    if st.button("📄 Read Document"):
+        if not document_id:
+            st.error("Please enter a Document ID!")
         else:
             try:
-                # Call run_drive_chat with the Drive Folder ID
-                result = run_drive_chat(folder_id=folder_id)
-                st.success("Files successfully read!")
+                # Call run_documents_chat with the Document ID
+                result = run_documents_chat(document_id=document_id)
+                st.success("Document successfully read!")
                 st.code(result, language="text")
             except Exception as e:
                 st.error(f"An error occurred: {e}")
