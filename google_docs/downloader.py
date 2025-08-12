@@ -1,30 +1,38 @@
-import os
+from typing import Optional, Dict, Any
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
-from shared.config import GOOGLE_APPLICATION_CREDENTIALS
+from shared.config import SETTINGS, ensure_credentials
 
-def fetch_google_docs_documents(credentials_path: str = GOOGLE_APPLICATION_CREDENTIALS):
-    """
-    Fetches a list of Google Docs documents.
 
-    :param credentials_path: Path to the Service Account JSON file
-    :return: List of document metadata
+def fetch_document(
+    document_id: str,
+    credentials_path: Optional[str] = None,
+    fields: str = "*"
+) -> Optional[Dict[str, Any]]:
     """
-    # Authentication
+    Tek bir Google Docs belgesini getirir.
+    fields parametresi performans için kısıtlanabilir (örn: 'title,body/content')
+    """
+    cred_path = credentials_path or ensure_credentials(SETTINGS.default_credentials_filename)
+    if not cred_path:
+        raise FileNotFoundError("Credentials file not found.")
+
     creds = service_account.Credentials.from_service_account_file(
-        credentials_path, scopes=["https://www.googleapis.com/auth/documents.readonly"]
+        cred_path, scopes=[SETTINGS.docs_api_scope]
     )
-
     service = build('docs', 'v1', credentials=creds)
 
-    print("🔍 Fetching Google Docs documents...")
-
-    # Example: Fetch a specific document by ID (replace 'DOCUMENT_ID' with actual ID)
-    document_id = "DOCUMENT_ID"  # Replace with actual document ID
     try:
-        document = service.documents().get(documentId=document_id).execute()
-        print(f"📄 Document fetched: {document.get('title', 'Unknown Document')}")
-        return [document]
+        doc = service.documents().get(documentId=document_id).execute()
+        return doc
+    except HttpError as e:
+        if e.resp.status == 404:
+            print(f"[ERROR] Document {document_id} not found (404).")
+        elif e.resp.status == 403:
+            print(f"[ERROR] Permission denied for {document_id} (403).")
+        else:
+            print(f"[ERROR] HttpError while fetching {document_id}: {e}")
     except Exception as e:
-        print(f"❌ Error fetching document: {e}")
-        return []
+        print(f"[ERROR] Unexpected error: {e}")
+    return None

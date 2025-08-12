@@ -1,55 +1,24 @@
-# Google Docs File Reader
+# Google Docs Semantic Reader (LlamaIndex)
 
-Bu proje, LLM işlevselliği veya API anahtarları gerektirmeden Google Docs'tan belgeleri okumak ve indekslemek için tasarlanmıştır.
+Bu uygulama:
+1. GoogleDocsReader (llama-index-readers-google) ile 1+ Google Doc ID okur.
+2. HuggingFaceEmbedding (`all-MiniLM-L6-v2`) ile embedding üretir (API key gereksiz).
+3. VectorStoreIndex oluşturur.
+4. QueryEngine üzerinden semantik arama ve kaynak chunk gösterir.
 
-## 🚀 Özellikler
+## Kurulum
+```bash
+pip install -r requirements.txt
+streamlit run main.py
+```
 
-- Google API'sini kullanarak Google Docs'tan belgeleri okuma.
-- Belgeleri verimli bir şekilde geri almak için indeksleme.
-- LLM bağımlılıkları olmadan basitleştirilmiş kurulum.
+## Credentials
+- Google Cloud Console → Docs API enable
+- Service Account → JSON key indir
+- JSON içeriğini uygulamada sol sidebar'a yapıştır
+- Belge(ler)i Service Account e-postası ile paylaş (Reader izni)
 
-## 📋 Gereksinimler
+## Kullanım
+1. Doc ID'leri (her satıra bir ID) gir → Load & Index
+2. Sorgu kutusuna arama / soru yaz → Search
 
-- Python 3.10 veya daha yenisi
-- Streamlit
-- Google API Python Client
-
-## 🛠️ Kurulum
-
-1. Depoyu klonlayın:
-   ```bash
-   git clone https://github.com/omerpanay/G-driveReader.git
-   ```
-2. Proje dizinine gidin:
-   ```bash
-   cd G-driveReader
-   ```
-3. Bağımlılıkları yükleyin:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## 📚 Kullanım
-
-1. Google API kimlik bilgilerinizi `credentials.json` dosyasına ayarlayın.
-2. Streamlit uygulamasını çalıştırın:
-   ```bash
-   streamlit run main.py
-   ```
-3. Okumak ve indekslemek için Google Belgesi Kimliğini girin.
-
-## 📝 Lisans
-
-Bu proje MIT lisansı altında lisanslanmıştır.
-
-## 🤝 Katkıda Bulunma
-
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit yapın (`git commit -m 'Add amazing feature'`)
-4. Push yapın (`git push origin feature/amazing-feature`)
-5. Pull Request oluşturun
-
-## 📞 İletişim
-
-Sorularınız için issue açın veya iletişime geçin.

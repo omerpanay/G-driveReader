@@ -1,50 +1,78 @@
 import streamlit as st
-from shared.llama_utils import setup_llama_index, create_index_from_documents
-from shared.config import setup_environment
-from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from llama_index.core import Document
 
-def run_documents_chat(document_id):
-    """Reads a specific document from Google Documents"""
-    setup_environment()
+from shared.llama_utils import setup_llama_index, create_index_from_documents
+from shared.config import SETTINGS, ensure_credentials
+from google_docs.downloader import fetch_document
 
-    # Set up LlamaIndex
+
+def extract_text_from_doc(document: dict) -> str:
+    """
+    Google Docs API dönen 'body.content' yapısından tüm textRun içeriklerini çıkarır.
+    Önceki sürüm yalnızca ilk element'i alıyordu—bu daha eksiksiz.
+    """
+    body = document.get("body", {})
+    contents = body.get("content", [])
+    texts = []
+    for element in contents:
+        para = element.get("paragraph")
+        if not para:
+            continue
+        for elem in para.get("elements", []):
+            text_run = elem.get("textRun")
+            if not text_run:
+                continue
+            content = text_run.get("content", "")
+            if content:
+                texts.append(content)
+    return "".join(texts).strip()
+
+
+def build_index_from_document(document_id: str):
+    """
+    UI'dan bağımsız iş mantığı: belgeyi getir → text çıkar → Document → index oluştur → döndür.
+    """
+    ensure_credentials()  # Gerekirse env'i hazırlar
+    raw_doc = fetch_document(document_id=document_id)
+    if not raw_doc:
+        raise ValueError(f"Document not found or inaccessible: {document_id}")
+
+    text_content = extract_text_from_doc(raw_doc)
+    if not text_content:
+        raise ValueError("Belge içeriği boş veya çözümlenemedi.")
+
+    formatted = Document(
+        text=text_content,
+        metadata={"title": raw_doc.get("title", "Unknown Document"), "doc_id": document_id}
+    )
+
     setup_llama_index()
+    index = create_index_from_documents([formatted], chunk_size=SETTINGS.chunk_size, chunk_overlap=SETTINGS.chunk_overlap)
+    return index, formatted
 
-    st.title("📄 Google Documents Reader")
-    st.write("Reading document from Google Documents...")
+
+def run_documents_chat(document_id: str):
+    """
+    Orijinal fonksiyonun geliştirilmiş hali.
+    Streamlit'e yazım burada kalıyor ancak iş mantığı build_index_from_document içinde.
+    """
+    st.write("📄 Belge okunuyor...")
 
     try:
-        # Create Google Documents API client
-        service = build('docs', 'v1')
-
-        # Get the document by ID
-        document = service.documents().get(documentId=document_id).execute()
-
-        if not document:
-            st.warning("Document not found.")
-            return
-
-        # Process the document and create an index
-        content_elements = document.get("body", {}).get("content", [])
-        text_content = "".join(
-            element.get("paragraph", {}).get("elements", [{}])[0].get("textRun", {}).get("content", "")
-            for element in content_elements if "paragraph" in element
-        )
-        formatted_document = Document(
-            text=text_content,
-            metadata={"title": document.get("title", "Unknown Document")}
-        )
-        index = create_index_from_documents([formatted_document])
-        st.success("Document successfully read and index created!")
-
-        # Display the list of files read
-        st.write("### Files Read:")
-        st.write(f"- {formatted_document.metadata['title']}")
+        index, formatted = build_index_from_document(document_id)
+        st.success("Belge başarıyla okundu & indeks oluşturuldu.")
+        st.write("### Başlık:")
+        st.write(f"- {formatted.metadata.get('title')}")
+        st.write("### İçerik (kırpılmış olabilir):")
+        preview = formatted.text[:4000] + ("... (truncated)" if len(formatted.text) > 4000 else "")
+        st.code(preview, language="text")
+        return {
+            "title": formatted.metadata.get("title"),
+            "length": len(formatted.text),
+            "index": index,
+        }
     except HttpError as e:
-        st.error(f"API error occurred: {e}")
-        return
+        st.error(f"API hatası: {e}")
     except Exception as e:
-        st.error(f"An error occurred: {e}")
-        return
+        st.error(f"Hata: {e}")
