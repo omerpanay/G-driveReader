@@ -7,4 +7,5 @@ llama-index-readers-google
 
 llama-index-embeddings-huggingface
 
-llama-index-llms-openai
+# OpenAI LLM paketi kullanılmıyor; gerekirse tekrar ekleyin:
+# llama-index-llms-openai

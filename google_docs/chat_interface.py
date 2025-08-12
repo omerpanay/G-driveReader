@@ -8,9 +8,8 @@ from google_docs.downloader import fetch_document
 
 
 def extract_text_from_doc(document: dict) -> str:
-    """
-    Google Docs API dönen 'body.content' yapısından tüm textRun içeriklerini çıkarır.
-    Önceki sürüm yalnızca ilk element'i alıyordu—bu daha eksiksiz.
+    """Extract every textRun string from Google Docs API 'body.content'.
+    Previous approach only took the first element; this is comprehensive.
     """
     body = document.get("body", {})
     contents = body.get("content", [])
@@ -30,17 +29,15 @@ def extract_text_from_doc(document: dict) -> str:
 
 
 def build_index_from_document(document_id: str):
-    """
-    UI'dan bağımsız iş mantığı: belgeyi getir → text çıkar → Document → index oluştur → döndür.
-    """
-    ensure_credentials()  # Gerekirse env'i hazırlar
+    """Independent logic: fetch doc → extract text → wrap as Document → build index."""
+    ensure_credentials()  # Ensure env var is set if needed
     raw_doc = fetch_document(document_id=document_id)
     if not raw_doc:
         raise ValueError(f"Document not found or inaccessible: {document_id}")
 
     text_content = extract_text_from_doc(raw_doc)
     if not text_content:
-        raise ValueError("Belge içeriği boş veya çözümlenemedi.")
+        raise ValueError("Document content empty or could not be parsed.")
 
     formatted = Document(
         text=text_content,
@@ -53,18 +50,15 @@ def build_index_from_document(document_id: str):
 
 
 def run_documents_chat(document_id: str):
-    """
-    Orijinal fonksiyonun geliştirilmiş hali.
-    Streamlit'e yazım burada kalıyor ancak iş mantığı build_index_from_document içinde.
-    """
-    st.write("📄 Belge okunuyor...")
+    """Build index for a single document and display a preview."""
+    st.write("📄 Loading document...")
 
     try:
         index, formatted = build_index_from_document(document_id)
-        st.success("Belge başarıyla okundu & indeks oluşturuldu.")
-        st.write("### Başlık:")
+        st.success("Document loaded & index built.")
+        st.write("### Title:")
         st.write(f"- {formatted.metadata.get('title')}")
-        st.write("### İçerik (kırpılmış olabilir):")
+        st.write("### Content (may be truncated):")
         preview = formatted.text[:4000] + ("... (truncated)" if len(formatted.text) > 4000 else "")
         st.code(preview, language="text")
         return {
@@ -73,6 +67,6 @@ def run_documents_chat(document_id: str):
             "index": index,
         }
     except HttpError as e:
-        st.error(f"API hatası: {e}")
+        st.error(f"API error: {e}")
     except Exception as e:
-        st.error(f"Hata: {e}")
+        st.error(f"Error: {e}")
