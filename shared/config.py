@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
-# Basit bir yapılandırma objesi. İleride pydantic BaseSettings'e taşınabilir.
+
 @dataclass
 class AppSettings:
     credentials_env_var: str = "GOOGLE_APPLICATION_CREDENTIALS"

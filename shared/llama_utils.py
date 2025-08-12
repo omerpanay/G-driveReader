@@ -4,8 +4,7 @@ from llama_index.core import Document, VectorStoreIndex, StorageContext, Setting
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-# Bu modülde OpenAI yerine HuggingFace embedding modeli ZORUNLU olarak kuruluyor.
-# Böylece OPENAI_API_KEY bulunamadı hatası alınmaz.
+
 
 _EMBED_MODEL = None  # lazy init
 
@@ -24,9 +23,9 @@ def setup_llama_index():
     try:
         _EMBED_MODEL = HuggingFaceEmbedding(model_name=model_name)
         Settings.embed_model = _EMBED_MODEL
-        # Eğer daha sonra LLM eklemek istersen (ör: local), Settings.llm = ... ekleyebilirsin.
+       
     except Exception as e:
-        # Kullanıcıya kısa bilgi bırakıyoruz; indeks oluşturma çağrıları bu embed_model olmadan çalışmayacak.
+       
         raise RuntimeError(f"HuggingFace embedding modeli yüklenemedi: {model_name} -> {e}")
 
 
