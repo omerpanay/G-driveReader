@@ -2,7 +2,7 @@
 
 Bu uygulama:
 1. GoogleDocsReader (llama-index-readers-google) ile 1+ Google Doc ID okur.
-2. HuggingFaceEmbedding (`all-MiniLM-L6-v2`) ile embedding üretir (API key gereksiz).
+2. HuggingFaceEmbedding (`all-MiniLM-L6-v2`) ile embedding üretir 
 3. VectorStoreIndex oluşturur.
 4. QueryEngine üzerinden semantik arama ve kaynak chunk gösterir.
 
